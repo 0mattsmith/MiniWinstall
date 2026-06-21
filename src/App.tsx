@@ -142,6 +142,7 @@ export default function App() {
   // Navigation Tabs: 'customize' (Features & Options), 'automation' (unattend), 'drivers' (drivers list), 'rust' (rust project engine), 'simulate' (simulation terminal), 'usb' (usb flasher)
   const [activeTab, setActiveTab] = useState<"customize" | "automation" | "drivers" | "rust" | "simulate" | "usb">("customize");
   const [showWorkflowCode, setShowWorkflowCode] = useState(false);
+  const [docTab, setDocTab] = useState<"manual" | "rust" | "cicd">("manual");
 
   // USB Flashing state variables
   const [usbDrive, setUsbDrive] = useState("D: [32GB] Kingston DataTraveler 3.0");
@@ -1116,17 +1117,163 @@ export default function App() {
                 )}
 
                 {/* Compiler read-me guidance */}
-                <div className="bg-slate-950 p-3 rounded border border-slate-800 flex flex-col gap-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-widest border-b border-slate-850 pb-1 flex items-center gap-1">
-                    <FileCode className="h-3 w-3 text-orange-500" /> README.md documentation
-                  </span>
-                  <div className="text-[11px] text-slate-450 leading-relaxed space-y-1.5 text-slate-400 font-sans font-sans">
-                    <p className="font-bold text-slate-205">How to compile locally in Arch Linux / macOS:</p>
-                    <code className="block bg-slate-900 px-2 py-1 select-all rounded font-mono text-indigo-400 text-[10.5px]">
-                      sudo pacman -S wimlib && cargo build --release
-                    </code>
-                    <p>Wimlib bypasses loop mounts so that non-privileged user spaces can rebuild compressed WIM tables in seconds.</p>
+                <div className="bg-slate-950 p-4 rounded-md border border-slate-800 flex flex-col gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-850 pb-2 gap-2">
+                    <span className="text-[10px] uppercase font-mono font-bold text-slate-400 tracking-widest flex items-center gap-1.5 select-none">
+                      <FileCode className="h-4 w-4 text-orange-500" /> README.md Comprehensive User Documentation
+                    </span>
+                    <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded border border-slate-800">
+                      <button
+                        onClick={() => setDocTab("manual")}
+                        className={`px-2 py-0.5 rounded text-[9.5px] font-semibold transition cursor-pointer select-none ${
+                          docTab === "manual" ? "bg-orange-600 text-white font-bold" : "text-slate-450 hover:text-slate-200"
+                        }`}
+                      >
+                        1. MiniWinstall Manual
+                      </button>
+                      <button
+                        onClick={() => setDocTab("rust")}
+                        className={`px-2 py-0.5 rounded text-[9.5px] font-semibold transition cursor-pointer select-none ${
+                          docTab === "rust" ? "bg-orange-600 text-white font-bold" : "text-slate-450 hover:text-slate-200"
+                        }`}
+                      >
+                        2. Rust Core CLI
+                      </button>
+                      <button
+                        onClick={() => setDocTab("cicd")}
+                        className={`px-2 py-0.5 rounded text-[9.5px] font-semibold transition cursor-pointer select-none ${
+                          docTab === "cicd" ? "bg-orange-600 text-white font-bold" : "text-slate-450 hover:text-slate-200"
+                        }`}
+                      >
+                        3. GitHub CI/CD Action
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Tab 1: MiniWinstall General Manual */}
+                  {docTab === "manual" && (
+                    <div className="text-[11px] text-slate-400 leading-relaxed font-sans space-y-3">
+                      <div className="bg-slate-900/50 p-3 rounded border border-slate-800/40">
+                        <h4 className="font-bold text-slate-200 mb-1 flex items-center gap-1">
+                          <Sparkles className="h-3 w-3 text-orange-400" /> Executive Description & Architecture
+                        </h4>
+                        <p>
+                          <strong>MiniWinstall</strong> is an in-browser dashboard combined with a high-performance **native Rust optimizer CLI**. It allows power users, system operators, and developers to trim the Windows 11 installation footprint by eliminating bulk UWP packages, embedded system trackers, gaming accessories, and telemetry hooks prior to network deployment.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        <div>
+                          <h5 className="font-bold text-slate-250 uppercase text-[10px] font-mono mb-1 text-orange-400">🔥 Core Features & Workflows:</h5>
+                          <ul className="space-y-1.5 list-none">
+                            <li className="flex items-start gap-1">
+                              <span className="text-orange-500 font-mono">▸</span>
+                              <span><strong>Strip Packages Tab:</strong> Eliminates telemetry, default bloatware, Xbox frameworks, and Edge to decrease the footprint by up to 14 GB.</span>
+                            </li>
+                            <li className="flex items-start gap-1">
+                              <span className="text-orange-500 font-mono">▸</span>
+                              <span><strong>Unattended Setup XML:</strong> Fully script auto-login keys, developer modes, offline local accounts, and bypass Win11 hardware barriers.</span>
+                            </li>
+                            <li className="flex items-start gap-1">
+                              <span className="text-orange-500 font-mono">▸</span>
+                              <span><strong>OEM Driver Injector:</strong> Pack virtual SCSI storage disk drivers (.INF / .SYS) or high-speed wireless protocols direct in boot tables.</span>
+                            </li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <h5 className="font-bold text-slate-250 uppercase text-[10px] font-mono mb-1 text-orange-400">🔥 Burning and Deployment:</h5>
+                          <ul className="space-y-1.5 list-none">
+                            <li className="flex items-start gap-1">
+                              <span className="text-orange-500 font-mono">▸</span>
+                              <span><strong>Direct USB Flasher:</strong> Configure Rufus-style write operations. Setup GPT/MBR partition boundaries, volume labels, and formatted file structures (NTFS/FAT32).</span>
+                            </li>
+                            <li className="flex items-start gap-1">
+                              <span className="text-orange-500 font-mono">▸</span>
+                              <span><strong>Compilation Simulator:</strong> Test build processes in real-time in the secure environment shell log tracer before running physical commands.</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-900/30 p-2.5 rounded border border-slate-850 text-[10px] flex justify-between items-center mt-1">
+                        <span className="text-slate-500">Need the full raw documentation file for your git repo root?</span>
+                        <button
+                          onClick={() => downloadFile("README.md", RUST_README)}
+                          className="px-2 py-1 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded font-semibold text-orange-400 font-mono text-[10px] transition cursor-pointer select-none"
+                        >
+                          Download complete README.md
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 2: Local CLI Tool Guide */}
+                  {docTab === "rust" && (
+                    <div className="text-[11px] text-slate-400 leading-relaxed font-sans space-y-3">
+                      <div>
+                        <h4 className="font-bold text-slate-200 mb-1">🔧 Compiling the Native Rust CLI Engine Locally</h4>
+                        <p>The native Rust optimizer uses zero-overhead memory operations to dissect, mount, and restructure `.WIM` cabinets. Unlike Microsoft ADK packages, our compiled Rust core leverages unprivileged user-space manipulation through the cross-platform <code className="text-orange-400 font-mono">wimlib</code> APIs.</p>
+                      </div>
+
+                      <div className="space-y-1 bg-slate-900 p-2.5 rounded border border-slate-850 font-mono text-[10.5px]">
+                        <p className="font-bold text-slate-300 select-none"># Install Wimlib & Rust tools depending on OS:</p>
+                        <p className="text-slate-450 select-none">// Arch Linux:</p>
+                        <code className="text-indigo-400 select-all block">sudo pacman -S wimlib</code>
+                        <p className="text-slate-450 select-none">// Ubuntu & Debian Linux:</p>
+                        <code className="text-indigo-400 select-all block">sudo apt install wimtools</code>
+                        <p className="text-slate-450 select-none">// MacOS (Apple Silicon or Intel):</p>
+                        <code className="text-indigo-400 select-all block">brew install wimlib</code>
+                        <p className="text-slate-450 select-none">// Once tools are active, compile via Cargo:</p>
+                        <code className="text-indigo-400 select-all block">cargo build --release</code>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <h5 className="font-bold text-slate-350 select-none text-[10px] tracking-wide uppercase font-mono">Executing local customizations:</h5>
+                        <code className="block bg-slate-950 p-2 rounded border border-slate-850 font-mono text-[10px] text-orange-400 selection:bg-orange-800/30 whitespace-pre-wrap">
+  {`./target/release/mini-winstall-engine \\
+  --wim-path "/path/to/sources/install.wim" \\
+  --index 1 \\
+  --unattend-path "./unattend.xml" \\
+  --drivers-dir "/path/to/my/manufacture_drivers"`}
+                        </code>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 3: CI/CD Pipeline Flow */}
+                  {docTab === "cicd" && (
+                    <div className="text-[11px] text-slate-400 leading-relaxed font-sans space-y-2.5">
+                      <div>
+                        <h4 className="font-bold text-slate-205 mb-1 flex items-center gap-1.5 text-xs font-mono">
+                          <Github className="h-3.5 w-3.5 text-orange-400" /> Automated GitHub CI/CD Compiling Blueprint
+                        </h4>
+                        <p>
+                          To completely bypass home system compilation requirements, an optimized CI/CD workflow is provided inside your repository folder structure at <code className="text-orange-405 font-mono">.github/workflows/release.yml</code>.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
+                        <div className="bg-slate-900/30 p-2 border border-slate-850 rounded">
+                          <span className="font-bold block text-slate-300 text-[10.5px]">1. Tag Release Trigger</span>
+                          <span className="text-[10px] text-slate-500 leading-normal block mt-1">Pushing any tag beginning with <code className="text-orange-400">v*</code>, like <code className="text-orange-400">v1.2.0</code> automatically spins up cross-platform runner agents globally.</span>
+                        </div>
+                        <div className="bg-slate-900/30 p-2 border border-slate-850 rounded">
+                          <span className="font-bold block text-slate-300 text-[10.5px]">2. Cross-Compilation</span>
+                          <span className="text-[10px] text-slate-500 leading-normal block mt-1">Runner machines on Windows Latest, Carbon Ubuntu, and macOS run isolated cargo tasks targeting static libraries and musl architectures.</span>
+                        </div>
+                        <div className="bg-slate-900/30 p-2 border border-slate-850 rounded">
+                          <span className="font-bold block text-slate-300 text-[10.5px]">3. Release Artifact Delivery</span>
+                          <span className="text-[10px] text-slate-500 leading-normal block mt-1">Ready compiled binaries for Windows, macOS Silicon, macOS Intel, and Linux are uploaded and mapped to your GitHub repository Releases pane automatically!</span>
+                        </div>
+                      </div>
+
+                      <div className="pt-1 select-none flex items-center gap-2 text-slate-500 font-mono text-[9.5px]">
+                        <Info className="h-3.5 w-3.5 text-orange-400 shrink-0" />
+                        <span>All environment cryptographic signatures are handled autonomously in secure runner sandboxes.</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}

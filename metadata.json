@@ -1,0 +1,8 @@
+{
+  "name": "MiniWinstall",
+  "description": "An interactive utility to customize Windows 11 components removal, create unattended setup scripts, inject system drivers, and download an extensible Rust engine to compile optimized Tiny11 ISOs locally.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

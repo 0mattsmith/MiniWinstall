@@ -71,16 +71,15 @@ jobs:
         shell: bash
 
       - name: Create or Update GitHub Release
-        if: startsWith(github.ref, 'refs/tags/') && github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
-          tag_name: ${{ github.ref_name }}
-          name: "MiniWinstall Engine Release ${{ github.ref_name }}"
+          tag_name: ${{ github.ref_name || 'v0.1.0-beta' }}
+          name: "MiniWinstall Engine Release v${{ github.ref_name || '0.1.0-beta' }}"
           body: |
             ## MiniWinstall Compiler Release Binaries
             
-            This release contains automatically compiled native binary assets of the **MiniWinstall Customizer Engine**, built on GitHub runners. These binaries let you strip Windows 11 and inject unattended files at lightning speeds.
+            This release contains automatically compiled native binary assets of the **MiniWinstall Customizer Engine**, built on GitHub runners. These binaries let you strip Windows 11 and inject[...]
             
             ### Package Manifests
             * **Windows x64**: `mini-winstall-engine-windows-amd64.exe`

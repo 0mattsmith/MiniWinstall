@@ -70,12 +70,22 @@ jobs:
           fi
         shell: bash
 
+      - name: Determine Tag Name
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "TAG_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+          else
+            echo "TAG_NAME=latest" >> $GITHUB_ENV
+          fi
+        shell: bash
+
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
+          tag_name: ${{ env.TAG_NAME }}
+          target_commitish: ${{ github.sha }}
           files: dist/*
-          name: "MiniWinstall Engine Release v${{ github.ref_type == 'tag' && github.ref_name || 'latest' }}"
+          name: "MiniWinstall Engine Release v${{ env.TAG_NAME }}"
           body: |
             ## MiniWinstall Compiler Release Binaries
             

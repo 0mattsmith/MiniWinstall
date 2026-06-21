@@ -1,0 +1,14 @@
+[package]
+name = "mini-winstall-engine"
+version = "0.1.0"
+edition = "2021"
+authors = ["Windows Tiny 11 Community"]
+description = "High-performance cross-platform Windows image customizer written in Rust. Leverages LLVM and wimlib for fast WIM compilation."
+
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+xml-rs = "0.8"
+fs_extra = "1.3"
+walkdir = "2.4"

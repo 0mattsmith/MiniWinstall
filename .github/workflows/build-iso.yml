@@ -57,7 +57,10 @@ jobs:
       - name: Download Windows Source ISO
         run: |
           echo "⬇️ Downloading Windows Source ISO image from Microsoft/External hosting..."
-          wget -v --show-progress -O source_windows.iso "${{ github.event.inputs.iso_url }}" || {
+          wget -v --show-progress \
+            --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
+            --referer="https://www.microsoft.com/" \
+            -O source_windows.iso "${{ github.event.inputs.iso_url }}" || {
             echo "❌ Download failed with exit code $?"
             exit 1
           }

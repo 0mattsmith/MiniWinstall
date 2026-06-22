@@ -6,7 +6,7 @@ on:
       iso_url:
         description: 'Direct download URL for Windows 11/10 ISO'
         required: true
-        default: 'https://software-static.download.prss.microsoft.com/db/Enterprise_CH_Eval_24H2_English_x64.iso'
+        default: 'https://software.download.prss.microsoft.com/db/Win11_23H2_English_x64v2.iso'
       wim_index:
         description: 'Windows Edition Wim Index to modify (e.g. 1, 2, 3)'
         required: true
@@ -57,7 +57,10 @@ jobs:
       - name: Download Windows Source ISO
         run: |
           echo "⬇️ Downloading Windows Source ISO image from Microsoft/External hosting..."
-          wget -q --show-progress -O source_windows.iso "${{ github.event.inputs.iso_url }}"
+          wget -v --show-progress -O source_windows.iso "${{ github.event.inputs.iso_url }}" || {
+            echo "❌ Download failed with exit code $?"
+            exit 1
+          }
           echo "✅ ISO download successfully completed."
 
       - name: Extract ISO Content to Sandbox Workspace

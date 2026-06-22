@@ -37,7 +37,6 @@ jobs:
       - name: Install System Prerequisites
         run: |
           sudo apt-get update
-          # Install wimlib package containing the required wimlib-imagex command
           sudo apt-get install -y wimlib xorriso wget p7zip-full
 
       - name: Set up Rust Toolchain

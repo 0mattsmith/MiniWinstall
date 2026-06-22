@@ -36,6 +36,7 @@ jobs:
 
       - name: Install System Prerequisites
         run: |
+          # Use wimlib-utils for Ubuntu 24.04 (noble) runners instead of deprecated wimlib-tools
           sudo apt-get update
           sudo apt-get install -y wimlib-utils xorriso wget p7zip-full
 

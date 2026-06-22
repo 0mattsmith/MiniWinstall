@@ -21,7 +21,15 @@ import {
   Check,
   Usb,
   Github,
-  GitBranch
+  GitBranch,
+  Folder,
+  FolderOpen,
+  File,
+  HardDrive,
+  Search,
+  ArrowUp,
+  X,
+  ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -138,11 +146,71 @@ const INITIAL_DRIVERS: DriverItem[] = [
   { id: "drv-2", name: "VMware SCSI Controller driver", type: "Storage", version: "v1.2.9.0", sizeKb: 450, fileName: "pvscsi.inf" },
 ];
 
+interface MockFileItem {
+  name: string;
+  type: "file" | "folder";
+  sizeGb?: number;
+  wimSizeGb?: number;
+  availableIndices?: string[];
+}
+
+const MOCK_FILE_SYSTEM: Record<string, MockFileItem[]> = {
+  "C:\\": [
+    { name: "Users", type: "folder" },
+    { name: "MiniWinstall", type: "folder" },
+    { name: "Program Files", type: "folder" }
+  ],
+  "C:\\Users": [
+    { name: "TinyPC", type: "folder" }
+  ],
+  "C:\\Users\\TinyPC": [
+    { name: "Downloads", type: "folder" },
+    { name: "Desktop", type: "folder" },
+    { name: "Documents", type: "folder" }
+  ],
+  "C:\\Users\\TinyPC\\Downloads": [
+    { name: "Win11_23H2_English_x64.iso", type: "file", sizeGb: 6.42, wimSizeGb: 5.48, availableIndices: ["1 (Pro)", "2 (Home)", "3 (Enterprise)"] },
+    { name: "Win11_Enterprise_LTSC.iso", type: "file", sizeGb: 5.12, wimSizeGb: 4.10, availableIndices: ["1 (Enterprise LTSC)"] },
+    { name: "Win10_22H2_English_x64.iso", type: "file", sizeGb: 5.80, wimSizeGb: 4.85, availableIndices: ["1 (Pro)", "2 (Home)"] }
+  ],
+  "C:\\Users\\TinyPC\\Desktop": [
+    { name: "Tiny11_QuickLink.lnk", type: "file" }
+  ],
+  "C:\\Users\\TinyPC\\Documents": [],
+  "C:\\MiniWinstall": [
+    { name: "Sandbox", type: "folder" },
+    { name: "Output", type: "folder" }
+  ],
+  "C:\\MiniWinstall\\Sandbox": [],
+  "C:\\MiniWinstall\\Output": [],
+  "D:\\": [
+    { name: "ISOs", type: "folder" },
+    { name: "Backup", type: "folder" }
+  ],
+  "D:\\ISOs": [
+    { name: "Windows_11_Home_Edition_23H2.iso", type: "file", sizeGb: 6.15, wimSizeGb: 5.15, availableIndices: ["1 (Home)"] }
+  ],
+  "D:\\Backup": []
+};
+
 export default function App() {
   // Navigation Tabs: 'customize' (Features & Options), 'automation' (unattend), 'drivers' (drivers list), 'rust' (rust project engine), 'simulate' (simulation terminal), 'usb' (usb flasher)
   const [activeTab, setActiveTab] = useState<"customize" | "automation" | "drivers" | "rust" | "simulate" | "usb">("customize");
   const [showWorkflowCode, setShowWorkflowCode] = useState(false);
   const [docTab, setDocTab] = useState<"manual" | "rust" | "cicd">("manual");
+
+  // ISO and Sandbox states
+  const [isoPath, setIsoPath] = useState<string>("C:\\Users\\TinyPC\\Downloads\\Win11_23H2_English_x64.iso");
+  const [sandboxPath, setSandboxPath] = useState<string>("C:\\MiniWinstall\\Sandbox");
+  const [isoWimSize, setIsoWimSize] = useState<number>(6.42);
+  const [isoIndex, setIsoIndex] = useState<string>("1 (Pro)");
+  const [availableIndices, setAvailableIndices] = useState<string[]>(["1 (Pro)", "2 (Home)", "3 (Enterprise)"]);
+  const [showFileBrowser, setShowFileBrowser] = useState<null | "iso" | "sandbox">(null);
+  
+  // File browser virtual directory states
+  const [browserCurrentDir, setBrowserCurrentDir] = useState<string>("C:\\Users\\TinyPC\\Downloads");
+  const [browserSelectedFile, setBrowserSelectedFile] = useState<string>("Win11_23H2_English_x64.iso");
+  const [browserManualInput, setBrowserManualInput] = useState<string>("");
 
   // USB Flashing state variables
   const [usbDrive, setUsbDrive] = useState("D: [32GB] Kingston DataTraveler 3.0");
@@ -394,6 +462,8 @@ export default function App() {
           removedComponents: removedList,
           unattendConfig: unattend,
           drivers,
+          isoPath,
+          sandboxPath
         })
       });
       const data = await response.json();
@@ -572,14 +642,74 @@ export default function App() {
         <aside className="w-64 bg-slate-950 flex flex-col p-3 gap-3 shrink-0 overflow-y-auto border-r border-slate-850">
           
           {/* Source Image Module */}
-          <section className="bg-slate-900 border border-slate-800 rounded p-2.5">
-            <h2 className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Selected Image Source</h2>
-            <div className="font-mono text-[10px] text-orange-400 break-all leading-normal bg-slate-950 p-2 rounded border border-slate-800">
-              /home/user/iso/win11_23h2_pro.iso
+          <section className="bg-slate-900 border border-slate-800 rounded p-2.5 flex flex-col gap-2">
+            <div>
+              <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Selected Image Source</h2>
+              <div className="flex gap-1.5">
+                <div 
+                  className="font-mono text-[9px] text-orange-400 break-all leading-normal bg-slate-950 p-2 rounded border border-slate-800 flex-1 truncate max-w-[172px]"
+                  title={isoPath}
+                >
+                  {isoPath}
+                </div>
+                <button
+                  onClick={() => {
+                    setShowFileBrowser("iso");
+                    setBrowserCurrentDir("C:\\Users\\TinyPC\\Downloads");
+                    setBrowserSelectedFile("Win11_23H2_English_x64.iso");
+                    setBrowserManualInput(isoPath);
+                  }}
+                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-orange-500 rounded border border-slate-700 cursor-pointer flex items-center justify-center transition"
+                  title="Browse/Change ISO file"
+                >
+                  <FolderOpen className="h-3 w-3" />
+                </button>
+              </div>
             </div>
-            <div className="flex justify-between mt-2 text-[10px] text-slate-500 font-mono">
-              <span>WIM Size: 6.42 GB</span>
-              <span>Index: 1 (Pro)</span>
+
+            {/* Sandbox Folder Module */}
+            <div>
+              <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 font-sans">Extraction Sandbox Path</h2>
+              <div className="flex gap-1.5">
+                <div 
+                  className="font-mono text-[9px] text-emerald-400 break-all leading-normal bg-slate-950 p-2 rounded border border-slate-800 flex-1 truncate max-w-[172px]"
+                  title={sandboxPath}
+                >
+                  {sandboxPath}
+                </div>
+                <button
+                  onClick={() => {
+                    setShowFileBrowser("sandbox");
+                    setBrowserCurrentDir("C:\\MiniWinstall");
+                    setBrowserSelectedFile("");
+                    setBrowserManualInput(sandboxPath);
+                  }}
+                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-emerald-500 rounded border border-slate-700 cursor-pointer flex items-center justify-center transition"
+                  title="Browse/Change Sandbox directory"
+                >
+                  <Folder className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+
+            {/* Iso meta index indicators */}
+            <div className="border-t border-slate-800/60 pt-1.5 flex flex-col gap-1 text-[10px] font-mono text-slate-500">
+              <div className="flex justify-between">
+                <span>WIM Size:</span>
+                <span className="text-slate-300 font-bold">{isoWimSize} GB</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Index:</span>
+                <select
+                  value={isoIndex}
+                  onChange={(e) => setIsoIndex(e.target.value)}
+                  className="bg-slate-950 border border-slate-850 rounded px-1 text-[9px] text-orange-400 font-bold focus:outline-none focus:border-orange-500 cursor-pointer max-w-[110px]"
+                >
+                  {availableIndices.map((idx) => (
+                    <option key={idx} value={idx}>{idx}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </section>
 
@@ -1681,6 +1811,293 @@ export default function App() {
           <span className="text-orange-500 font-bold">BUILD READY</span>
         </div>
       </footer>
+
+      {/* Virtual Filesystem Choice Dialog */}
+      <AnimatePresence>
+        {showFileBrowser && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="bg-slate-900 border border-slate-800 rounded-lg w-full max-w-2xl h-[480px] shadow-2xl flex flex-col overflow-hidden text-sm"
+            >
+              {/* Header */}
+              <div className="h-12 border-b border-slate-850 px-4 bg-slate-950 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 bgColor bg-slate-800 text-orange-400 rounded">
+                    <HardDrive className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+                      {showFileBrowser === "iso" ? "Select Windows 11/10 Source ISO" : "Select Unpacking Sandbox Directory"}
+                    </h3>
+                    <p className="text-[10px] text-slate-500 font-mono -mt-0.5">VIRTUAL_DISK_CONTROLLER::SECURE_FRAMEWORK</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowFileBrowser(null)}
+                  className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Explorer Core container */}
+              <div className="flex-1 flex overflow-hidden">
+                {/* Sidebar Quick Links */}
+                <div className="w-44 bg-slate-950 border-r border-slate-850 flex flex-col p-2 gap-1.5 shrink-0 font-mono text-[10.5px]">
+                  <span className="text-[9px] uppercase font-bold text-slate-650 px-2 pt-1 tracking-widest block mb-1">Quick Access</span>
+                  <button 
+                    onClick={() => {
+                      setBrowserCurrentDir("C:\\");
+                      setBrowserSelectedFile("");
+                    }}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded transition text-left ${
+                      browserCurrentDir === "C:\\" ? "bg-slate-900 text-orange-400 border border-slate-850" : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <HardDrive className="h-3.5 w-3.5 text-slate-500" />
+                    Local Disk (C:)
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setBrowserCurrentDir("D:\\");
+                      setBrowserSelectedFile("");
+                    }}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded transition text-left ${
+                      browserCurrentDir === "D:\\" ? "bg-slate-900 text-orange-400 border border-slate-850" : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <HardDrive className="h-3.5 w-3.5 text-slate-500" />
+                    Archive Drive (D:)
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setBrowserCurrentDir("C:\\Users\\TinyPC\\Downloads");
+                      setBrowserSelectedFile("Win11_23H2_English_x64.iso");
+                    }}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded transition text-left ${
+                      browserCurrentDir === "C:\\Users\\TinyPC\\Downloads" ? "bg-slate-900 text-orange-400 border border-slate-850" : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <Download className="h-3.5 w-3.5 text-slate-500" />
+                    Downloads Folder
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setBrowserCurrentDir("C:\\MiniWinstall");
+                      setBrowserSelectedFile("");
+                    }}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded transition text-left ${
+                      browserCurrentDir === "C:\\MiniWinstall" ? "bg-slate-900 text-orange-400 border border-slate-850" : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <Settings className="h-3.5 w-3.5 text-slate-500" />
+                    MiniWinstall Hub
+                  </button>
+                </div>
+
+                {/* Right: Path bar & files grid */}
+                <div className="flex-1 flex flex-col p-3 gap-2 overflow-hidden">
+                  {/* breadcrumbs folder tools */}
+                  <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded border border-slate-850 h-8 shrink-0">
+                    <button 
+                      onClick={() => {
+                        if (browserCurrentDir === "C:\\" || browserCurrentDir === "D:\\") return;
+                        const parts = browserCurrentDir.split("\\");
+                        parts.pop();
+                        let parent = parts.join("\\");
+                        if (parent === "C:") parent = "C:\\";
+                        if (parent === "D:") parent = "D:\\";
+                        setBrowserCurrentDir(parent);
+                        setBrowserSelectedFile("");
+                      }}
+                      disabled={browserCurrentDir === "C:\\" || browserCurrentDir === "D:\\"}
+                      className="px-2 py-1 text-[10px] font-bold text-slate-400 hover:text-white bg-slate-900 border border-slate-800 rounded disabled:opacity-30 flex items-center gap-1"
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                      Up
+                    </button>
+                    <div className="flex-1 font-mono text-[10px] text-slate-400 truncate tracking-tight px-1.5">
+                      {browserCurrentDir}
+                    </div>
+                  </div>
+
+                  {/* items directory grid */}
+                  <div className="flex-1 bg-slate-950 rounded border border-slate-850 overflow-y-auto p-2">
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {/* Parent Directory handle */}
+                      {browserCurrentDir !== "C:\\" && browserCurrentDir !== "D:\\" && (
+                        <div 
+                          onClick={() => {
+                            const parts = browserCurrentDir.split("\\");
+                            parts.pop();
+                            let parent = parts.join("\\");
+                            if (parent === "C:") parent = "C:\\";
+                            if (parent === "D:") parent = "D:\\";
+                            setBrowserCurrentDir(parent);
+                            setBrowserSelectedFile("");
+                          }}
+                          className="p-2 hover:bg-slate-900/40 rounded flex items-center gap-2 group cursor-pointer transition border border-transparent hover:border-slate-800"
+                        >
+                          <FolderOpen className="h-4 w-4 text-emerald-600 shrink-0" />
+                          <div className="truncate">
+                            <span className="text-[11px] font-mono text-slate-400">.. [Parent Dir]</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Folder Listing */}
+                      {(MOCK_FILE_SYSTEM[browserCurrentDir] || []).length === 0 ? (
+                        <div className="col-span-2 py-16 text-center text-slate-650 font-mono text-[11px]">
+                          [Empty Directory / Setup Container]
+                        </div>
+                      ) : (
+                        MOCK_FILE_SYSTEM[browserCurrentDir].map((item) => {
+                          const isSelected = item.name === browserSelectedFile;
+                          const showItem = showFileBrowser === "iso" ? true : item.type === "folder";
+                          
+                          if (!showItem) return null;
+
+                          return (
+                            <div 
+                              key={item.name}
+                              onClick={() => {
+                                if (item.type === "folder") {
+                                  const nestedPath = browserCurrentDir === "C:\\" || browserCurrentDir === "D:\\" 
+                                    ? browserCurrentDir + item.name 
+                                    : browserCurrentDir + "\\" + item.name;
+                                  setBrowserCurrentDir(nestedPath);
+                                  setBrowserSelectedFile("");
+                                } else {
+                                  setBrowserSelectedFile(item.name);
+                                }
+                              }}
+                              className={`p-2 rounded flex items-center gap-2 group cursor-pointer transition border ${
+                                isSelected 
+                                  ? "bg-orange-950/20 border-orange-500/50 text-orange-400" 
+                                  : "hover:bg-slate-900/60 border-transparent hover:border-slate-800 text-slate-350"
+                              }`}
+                            >
+                              {item.type === "folder" ? (
+                                <Folder className="h-4 w-4 text-amber-500 group-hover:scale-110 transition shrink-0" />
+                              ) : (
+                                <File className={`h-4 w-4 group-hover:scale-110 transition shrink-0 ${
+                                  item.name.endsWith(".iso") ? "text-orange-400" : "text-slate-500"
+                                }`} />
+                              )}
+                              <div className="truncate flex-1">
+                                <span className="text-[11px] font-mono font-medium block truncate select-none leading-none pt-1">
+                                  {item.name}
+                                </span>
+                                {item.type === "file" && item.sizeGb && (
+                                  <span className="text-[9px] text-slate-500 block font-mono">
+                                    Size: {item.sizeGb} GB
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Manual entry fallback */}
+                  <div className="border-t border-slate-805/50 pt-1 flex flex-col gap-1 shrink-0">
+                    <span className="text-[9px] uppercase font-bold text-slate-605 tracking-wider">Type any custom absolute host path directly:</span>
+                    <div className="flex gap-1.5 h-7">
+                      <input 
+                        type="text"
+                        placeholder="C:\ExtractedSharedWorkspace\Windows_Image..."
+                        value={browserManualInput}
+                        onChange={(e) => setBrowserManualInput(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded px-2 py-0 text-xs font-mono text-slate-300 flex-1 outline-none focus:border-orange-500 placeholder-slate-700"
+                      />
+                      <button 
+                        onClick={() => {
+                          if (!browserManualInput.trim()) return;
+                          if (showFileBrowser === "iso") {
+                            setIsoPath(browserManualInput);
+                          } else {
+                            setSandboxPath(browserManualInput);
+                          }
+                          setShowFileBrowser(null);
+                        }}
+                        className="px-2.5 py-0 bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 rounded border border-slate-700 cursor-pointer h-full"
+                      >
+                        Apply path
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action feet footer */}
+              <div className="h-10 border-t border-slate-850 px-3 bg-slate-955 flex items-center justify-between shrink-0 font-mono text-[10.5px]">
+                <div className="text-slate-500 italic">
+                  {showFileBrowser === "iso" && browserSelectedFile && (
+                    <span className="text-orange-500">Selected ISO: {browserSelectedFile}</span>
+                  )}
+                  {showFileBrowser === "sandbox" && (
+                    <span className="text-emerald-500">Target Sandbox: {browserCurrentDir}</span>
+                  )}
+                  {!browserSelectedFile && showFileBrowser === "iso" && (
+                    <span>No .iso file highlighted</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setShowFileBrowser(null)}
+                    className="px-3 py-1 bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-400 font-bold rounded cursor-pointer transition"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (showFileBrowser === "iso") {
+                        if (browserSelectedFile) {
+                          const fullPath = browserCurrentDir + "\\" + browserSelectedFile;
+                          setIsoPath(fullPath);
+                          // find metadata size & indices
+                          const itemInfo = (MOCK_FILE_SYSTEM[browserCurrentDir] || []).find(it => it.name === browserSelectedFile);
+                          if (itemInfo) {
+                            if (itemInfo.wimSizeGb) {
+                              setIsoWimSize(itemInfo.wimSizeGb);
+                            }
+                            if (itemInfo.availableIndices) {
+                              setAvailableIndices(itemInfo.availableIndices);
+                              setIsoIndex(itemInfo.availableIndices[0] || "1 (Pro)");
+                            }
+                          }
+                        } else {
+                          // Allow choosing the folder or manual path
+                          setIsoPath(browserCurrentDir);
+                        }
+                      } else {
+                        // Sandbox selection targets the active folder choice
+                        const p = browserCurrentDir;
+                        setSandboxPath(p);
+                      }
+                      setShowFileBrowser(null);
+                    }}
+                    className="px-3.5 py-1 bg-orange-600 text-white font-bold rounded cursor-pointer hover:bg-orange-500 transition shadow-lg shadow-orange-900/10"
+                  >
+                    Confirm selection
+                  </button>
+                </div>
+              </div>
+
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

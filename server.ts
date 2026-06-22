@@ -264,14 +264,14 @@ Your output must be strictly in clean JSON format.`;
 
 // 3. Simulated logs streaming API simulation
 app.post("/api/simulate-builder", (req, res) => {
-  const { removedComponents, unattendConfig, drivers, plugins } = req.body;
+  const { removedComponents, unattendConfig, drivers, plugins, isoPath, sandboxPath } = req.body;
   const steps = [
     { delay: 1000, message: "[INFO] Initializing Windows Tiny 11 Rust Customizer Image Pipeline..." },
-    { delay: 2000, message: "[INFO] Target environment: Host OS: Cross-platform virtualization client verified." },
-    { delay: 3000, message: "[SUCCESS] Rust core workspace parsed. Native bindings to LLVM initialized." },
-    { delay: 4200, message: `[INFO] Parsing Windows 11 ISO metadata... Detected Windows 11 Pro 23H2 Image 1 (Install.wim)` },
-    { delay: 5500, message: "[INFO] Extracting boot files & catalog index structures..." },
-    { delay: 7000, message: `[INFO] Generating customized unattended XML configuration... OK` },
+    { delay: 2000, message: `[INFO] Image source: Loaded "${isoPath || "C:\\Users\\TinyPC\\Downloads\\Win11_23H2_English_x64.iso"}"` },
+    { delay: 3000, message: `[INFO] Unpacking and sandbox workspace: "${sandboxPath || "C:\\MiniWinstall\\Sandbox"}"` },
+    { delay: 3800, message: "[SUCCESS] Rust core workspace parsed. Native bindings to LLVM initialized." },
+    { delay: 4800, message: "[INFO] Extracting boot files & catalog index structures..." },
+    { delay: 5800, message: `[INFO] Generating customized unattended XML configuration... OK` },
     ...((removedComponents || []).map((comp: any, idx: number) => {
       return {
         delay: 8200 + (idx * 1100),

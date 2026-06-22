@@ -42,7 +42,16 @@ It leverages cross-platform **wimlib** APIs to manipulate WIM/ESD tables directl
 *   **macOS (Homebrew)**: `brew install wimlib`
 *   **Windows Direct**: Download binary libraries from [wimlib.net](https://wimlib.net/) and place `wimlib-imagex.exe` in your system's PATH.
 
-#### 2. Cargo Compilation
+#### 2. Local Compilation & Packaging (makepkg & Cargo)
+
+##### Option A: Arch Linux Native Packaging (Recommended for Arch)
+If you are running Arch Linux, we have bundled a native `PKGBUILD` recipe. Simply run:
+```bash
+makepkg -si
+```
+This automatically downloads system dependencies (like `wimlib-imagex`, `p7zip`, `xorriso`, `wget`), compiles the Rust source via Cargo, packages it, and installs it cleanly into your system's `/usr/bin/mini-winstall-engine` bin path.
+
+##### Option B: Manual Cargo Compilation (Any Platform)
 Execute within your local clone workspace:
 ```bash
 cargo build --release

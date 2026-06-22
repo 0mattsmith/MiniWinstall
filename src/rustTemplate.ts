@@ -333,8 +333,8 @@ To compile Windows 11 ISOs and manipulate WIM files across target platforms, thi
 
 #### 1. Arch Linux / Ubuntu / Debian
 \`\`\`bash
-# Arch Linux:
-sudo pacman -S wimlib walkdir
+# Arch Linux (Install wimlib & build tools):
+sudo pacman -S wimlib xorriso wget p7zip base-devel
 
 # Ubuntu / Debian:
 sudo apt install wimtools
@@ -351,8 +351,15 @@ brew install wimlib
 
 ---
 
-## Compiling the Native Rust Engine
+## Compiling & Packaging the Native Engine
 
+### Option A: Arch Linux Native Packaging (Recommended)
+Arch Linux supports native packaging using our pre-configured \`PKGBUILD\` script. To automatically check system dependencies, download packages, build, and register the optimizer, simply run:
+\`\`\`bash
+makepkg -si
+\`\`\`
+
+### Option B: Cross-Platform Rust Compilation (Any OS)
 Compile the optimized release binary directly with cargo:
 \`\`\`bash
 cargo build --release
@@ -360,7 +367,7 @@ cargo build --release
 
 The compiled native binary is placed in:
 \`\`\`
-./target/release/tiny11-rust-engine
+./target/release/mini-winstall-engine
 \`\`\`
 
 ---

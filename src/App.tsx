@@ -1347,14 +1347,16 @@ export default function App() {
                       </div>
 
                       <div className="space-y-1 bg-slate-900 p-2.5 rounded border border-slate-850 font-mono text-[10.5px]">
-                        <p className="font-bold text-slate-300 select-none"># Install Wimlib & Rust tools depending on OS:</p>
-                        <p className="text-slate-450 select-none">// Arch Linux:</p>
-                        <code className="text-indigo-400 select-all block">sudo pacman -S wimlib</code>
-                        <p className="text-slate-450 select-none">// Ubuntu & Debian Linux:</p>
-                        <code className="text-indigo-400 select-all block">sudo apt install wimtools</code>
-                        <p className="text-slate-450 select-none">// MacOS (Apple Silicon or Intel):</p>
-                        <code className="text-indigo-400 select-all block">brew install wimlib</code>
-                        <p className="text-slate-450 select-none">// Once tools are active, compile via Cargo:</p>
+                        <p className="font-bold text-slate-300 select-none"># Option A: Arch Linux Native PKGBUILD Build (Recommended for Arch)</p>
+                        <p className="text-slate-450 select-none">// This automatically fetches dependencies, compiles with Cargo, and registers /usr/bin/mini-winstall-engine:</p>
+                        <code className="text-orange-400 select-all block font-bold">makepkg -si</code>
+                        
+                        <p className="font-bold text-slate-300 pt-2 select-none"># Option B: Manual Cross-Platform Compile (Any OS)</p>
+                        <p className="text-slate-450 select-none">// 1. Install prerequisites depending on OS target:</p>
+                        <p className="text-slate-500 select-none">   • Arch Linux: <code className="text-indigo-400 select-all">sudo pacman -S wimlib xorriso wget p7zip base-devel</code></p>
+                        <p className="text-slate-500 select-none">   • Ubuntu/Debian: <code className="text-indigo-400 select-all">sudo apt install wimtools</code></p>
+                        <p className="text-slate-500 select-none">   • macOS: <code className="text-indigo-400 select-all">brew install wimlib</code></p>
+                        <p className="text-slate-450 pt-1 select-none">// 2. Compile custom binaries via Cargo:</p>
                         <code className="text-indigo-400 select-all block">cargo build --release</code>
                       </div>
 

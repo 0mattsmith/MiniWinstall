@@ -6,6 +6,7 @@ on:
       iso_url:
         description: 'Direct download URL for Windows 11/10 ISO'
         required: true
+        default: 'https://software-static.download.prss.microsoft.com/db/Enterprise_CH_Eval_24H2_English_x64.iso'
       wim_index:
         description: 'Windows Edition Wim Index to modify (e.g. 1, 2, 3)'
         required: true
@@ -40,7 +41,7 @@ jobs:
           sudo add-apt-repository -y universe
           sudo apt-get update
           
-          # Debug utility to search for available WIM packages in Ubuntu repository
+          # Debug utility to search for available wim/wimlib packages in Ubuntu repository
           echo "=== Searching for available WIM packages ==="
           apt-cache search wim | grep -i wimlib || true
           echo "=========================================="
@@ -53,32 +54,13 @@ jobs:
       - name: Set up Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Validate ISO URL and Download
+      - name: Download Windows Source ISO
         run: |
-          set -euo pipefail
-
-          ISO_URL="${{ github.event.inputs.iso_url }}"
-
-          if [ -z "$ISO_URL" ]; then
-            echo "❌ iso_url input is empty. Provide a direct download URL when dispatching the workflow."
-            exit 1
-          fi
-
-          echo "🔎 Checking HTTP status for: $ISO_URL"
-          # Follow redirects and return final HTTP code
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -L "$ISO_URL" || echo "000")
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "❌ URL returned HTTP status $HTTP_CODE. Please verify the direct download link (needs to return 200)."
-            exit 1
-          fi
-
-          echo "⬇️ Downloading Windows Source ISO image..."
-          # wget with retries and continue support
+          echo "⬇️ Downloading Windows Source ISO image from Microsoft/External hosting..."
           wget -v --show-progress \
             --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
             --referer="https://www.microsoft.com/" \
-            --tries=5 --waitretry=10 --timeout=60 -c \
-            -O source_windows.iso "$ISO_URL" || {
+            -O source_windows.iso "${{ github.event.inputs.iso_url }}" || {
             echo "❌ Download failed with exit code $?"
             exit 1
           }

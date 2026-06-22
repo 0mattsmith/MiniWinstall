@@ -37,7 +37,19 @@ jobs:
       - name: Install System Prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y wimlib xorriso wget p7zip-full
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y universe
+          sudo apt-get update
+          
+          # Debug utility to search for available wim/wimlib packages in Ubuntu repository
+          echo "=== Searching for available WIM packages ==="
+          apt-cache search wim | grep -i wimlib || true
+          echo "=========================================="
+          
+          # Install candidate packages: wimtools (official on Ubuntu), wimlib, or libwim-dev
+          sudo apt-get install -y wimtools libwim-dev xorriso wget p7zip-full || \
+          sudo apt-get install -y wimlib xorriso wget p7zip-full || \
+          sudo apt-get install -y libwim-dev xorriso wget p7zip-full
 
       - name: Set up Rust Toolchain
         uses: dtolnay/rust-toolchain@stable

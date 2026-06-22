@@ -37,7 +37,7 @@ jobs:
       - name: Install System Prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y wimlib-tools xorriso wget p7zip-full
+          sudo apt-get install -y wimtools xorriso wget p7zip-full
 
       - name: Set up Rust Toolchain
         uses: dtolnay/rust-toolchain@stable

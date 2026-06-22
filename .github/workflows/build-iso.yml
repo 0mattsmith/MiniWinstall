@@ -1,0 +1,121 @@
+name: Build Customized Tiny-11 ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      iso_url:
+        description: 'Direct download URL for Windows 11/10 ISO'
+        required: true
+        default: 'https://software-static.download.prss.microsoft.com/db/Enterprise_CH_Eval_24H2_English_x64.iso'
+      wim_index:
+        description: 'Windows Edition Wim Index to modify (e.g. 1, 2, 3)'
+        required: true
+        default: '1'
+      bypass_tpm:
+        description: 'Inject Unattended XML to bypass TPM, CPU, and RAM checks'
+        type: boolean
+        required: true
+        default: true
+      remove_bloatware:
+        description: 'Strip default bloated Microsoft Store apps'
+        type: boolean
+        required: true
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-iso:
+    name: Build & Package Custom ISO
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: Install System Prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wimlib-tools xorriso wget p7zip-full
+
+      - name: Set up Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Download Windows Source ISO
+        run: |
+          echo "⬇️ Downloading Windows Source ISO image from Microsoft/External hosting..."
+          wget -q --show-progress -O source_windows.iso "${{ github.event.inputs.iso_url }}"
+          echo "✅ ISO download successfully completed."
+
+      - name: Extract ISO Content to Sandbox Workspace
+        run: |
+          echo "📂 Creating clean extraction sandbox folder..."
+          mkdir -p win_sandbox
+          echo "📦 Extracting ISO contents with 7-Zip..."
+          7z x source_windows.iso -owin_sandbox/
+          echo "✅ Sandbox workspace populated."
+
+      - name: Build Rust Customizer Engine Tool
+        run: |
+          echo "🦀 Compiling the Rust WIM Modification Customizer..."
+          cargo build --release
+
+      - name: Run Engine to Strip Bloat and Customize Image
+        run: |
+          # Detect the correct install file format (often .wim, sometimes .esd)
+          WIM_PATH="win_sandbox/sources/install.wim"
+          
+          if [ ! -f "$WIM_PATH" ]; then
+            echo "⚠️ install.wim not found directly, checking for install.esd..."
+            if [ -f "win_sandbox/sources/install.esd" ]; then
+              echo "🔄 Converting install.esd to install.wim using wimlib-imagex..."
+              wimlib-imagex export win_sandbox/sources/install.esd all "$WIM_PATH" --compress=LZX
+              rm win_sandbox/sources/install.esd
+            else
+              echo "❌ Error: Could not locate install.wim or install.esd inside iso 'sources' directory!"
+              ls -l win_sandbox/sources/
+              exit 1
+            fi
+          fi
+          
+          # Generate placeholder blank files if optional args aren't pushed yet
+          touch unattend.xml
+          touch strip_config.json
+          mkdir -p custom_drivers
+          
+          # Execute the compiled native Customizer Engine binary
+          ./target/release/mini-winstall-engine \
+            --wim-path "$WIM_PATH" \
+            --index "${{ github.event.inputs.wim_index }}" \
+            --unattend-path "./unattend.xml" \
+            --config-path "./strip_config.json" \
+            --drivers-dir "./custom_drivers"
+          
+          echo "✅ Image customization completed successfully."
+
+      - name: Generate bootable ISO using xorriso
+        run: |
+          echo "💿 Creating bootable customized ISO using xorriso..."
+          # Configure correct El Torito/UEFI files path alignment
+          xorriso -as mkisofs \
+            -no-emul-boot \
+            -b boot/etfsboot.com \
+            -boot-load-size 4 \
+            -boot-info-table \
+            -eltorito-alt-boot \
+            -e efi/microsoft/boot/efisys.bin \
+            -no-emul-boot \
+            -isohybrid-gpt-basdat \
+            -V "TINY11_CUSTOM" \
+            -o output-unattended-image.iso \
+            win_sandbox/
+          
+          echo "✅ Customized bootable ISO generated."
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Customized-Windows-Tiny11-ISO
+          path: output-unattended-image.iso
+          retention-days: 5

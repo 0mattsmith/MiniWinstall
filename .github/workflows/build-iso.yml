@@ -6,7 +6,7 @@ on:
       iso_url:
         description: 'Direct download URL for Windows 11/10 ISO'
         required: true
-        default: 'https://your-valid-iso-url-here.iso'
+        default: 'https://software-static.download.prss.microsoft.com/db/Enterprise_CH_Eval_24H2_English_x64.iso'
       wim_index:
         description: 'Windows Edition Wim Index to modify (e.g. 1, 2, 3)'
         required: true
